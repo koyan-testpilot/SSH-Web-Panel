@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import StatCard from './StatCard';
 import BandwidthChart from './BandwidthChart';
@@ -14,8 +15,8 @@ const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
+    const fetchData = async (isInitialLoad = false) => {
+      if (isInitialLoad) setLoading(true);
       try {
         const [statsData, onlineUsersData, serverDetailsData] = await Promise.all([
           getDashboardStats(),
@@ -28,11 +29,17 @@ const Dashboard: React.FC = () => {
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
       } finally {
-        setLoading(false);
+        if (isInitialLoad) setLoading(false);
       }
     };
 
-    fetchData();
+    fetchData(true); // Initial fetch with loader
+
+    const intervalId = setInterval(() => {
+        fetchData(false); // Subsequent fetches without loader
+    }, 5000); // Refresh data every 5 seconds
+
+    return () => clearInterval(intervalId); // Cleanup on component unmount
   }, []);
 
   if (loading) {

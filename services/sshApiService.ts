@@ -1,10 +1,30 @@
+
 import { MOCK_USERS } from '../constants';
 import { User, DashboardStats, UserStatus, ServerDetails, Service, ServiceStatus } from '../types';
 
 // The "database". Initialize with a deep copy of mock data.
 let users: User[] = JSON.parse(JSON.stringify(MOCK_USERS));
+let adminCredentials = { username: 'admin', password: 'password' };
+let isDefaultCredentials = true;
 
 const SIMULATED_DELAY = 500; // ms
+
+// Simulate a server boot time to calculate uptime dynamically.
+// This will be a random time within the last 30 days, persisted in localStorage.
+const getPersistentServerBootTime = (): Date => {
+    const storedBootTime = localStorage.getItem('ssh_panel_boot_time');
+    if (storedBootTime) {
+        // Use the stored time if it exists
+        return new Date(parseInt(storedBootTime, 10));
+    }
+    // Otherwise, create a new time and store it
+    const newBootTime = new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000);
+    localStorage.setItem('ssh_panel_boot_time', newBootTime.getTime().toString());
+    return newBootTime;
+};
+
+const serverBootTime = getPersistentServerBootTime();
+
 
 // Helper to simulate network delay and return deep copies to prevent state leakage
 const simulateApi = <T,>(data: T): Promise<T> => {
@@ -12,7 +32,7 @@ const simulateApi = <T,>(data: T): Promise<T> => {
         setTimeout(() => {
             // Deep copy to simulate receiving data from an API
             resolve(JSON.parse(JSON.stringify(data)));
-        }, SIMULATED_DELAY);
+        }, SIMULATED_DELAY / 2); // Reduced delay for faster UI updates
     });
 };
 
@@ -66,14 +86,45 @@ const isExpiringSoon = (expireDateStr: string): boolean => {
 
 // --- API Functions ---
 
-export const login = (username: string, password: string): Promise<boolean> => {
+export const login = (username: string, password: string): Promise<{ success: boolean; isDefault: boolean }> => {
     return new Promise(resolve => {
         setTimeout(() => {
-            if (username === 'admin' && password === 'password') {
-                resolve(true);
+            if (username === adminCredentials.username && password === adminCredentials.password) {
+                resolve({ success: true, isDefault: isDefaultCredentials });
             } else {
-                resolve(false);
+                resolve({ success: false, isDefault: false });
             }
+        }, SIMULATED_DELAY);
+    });
+};
+
+export const setInitialAdminCredentials = (newUsername: string, newPassword: string): Promise<{ success: boolean }> => {
+    return new Promise(resolve => {
+        setTimeout(() => {
+            if (!newUsername.trim() || !newPassword.trim()) {
+                resolve({ success: false });
+                return;
+            }
+            adminCredentials = { username: newUsername, password: newPassword };
+            isDefaultCredentials = false;
+            resolve({ success: true });
+        }, SIMULATED_DELAY);
+    });
+};
+
+export const updateAdminCredentials = (currentPassword: string, newUsername: string, newPassword: string): Promise<{ success: boolean; message?: string }> => {
+     return new Promise(resolve => {
+        setTimeout(() => {
+            if (currentPassword !== adminCredentials.password) {
+                resolve({ success: false, message: 'Current password is incorrect.' });
+                return;
+            }
+            if (!newUsername.trim() || !newPassword.trim()) {
+                resolve({ success: false, message: 'New username and password cannot be empty.' });
+                return;
+            }
+            adminCredentials = { username: newUsername, password: newPassword };
+            resolve({ success: true });
         }, SIMULATED_DELAY);
     });
 };
@@ -118,18 +169,42 @@ export const getOnlineUsers = (): Promise<User[]> => {
     return simulateApi(online);
 };
 
+/**
+ * Helper function to format uptime from milliseconds to a human-readable string.
+ * @param ms Milliseconds to format.
+ */
+const formatUptime = (ms: number): string => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const days = Math.floor(totalSeconds / (3600 * 24));
+    const hours = Math.floor((totalSeconds % (3600 * 24)) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+    let uptimeString = '';
+    if (days > 0) uptimeString += `${days}d `;
+    if (hours > 0) uptimeString += `${hours}h `;
+    if (minutes > 0) uptimeString += `${minutes}m`;
+    
+    return uptimeString.trim() || "Just now";
+};
+
 export const getServerDetails = (): Promise<ServerDetails> => {
+    const uptimeMs = Date.now() - serverBootTime.getTime();
+    
+    // Simulate some services randomly being active/inactive to feel more "live"
+    const services: Service[] = [
+        { name: "SSH (OpenSSH)", status: ServiceStatus.Active }, // SSH should always be active
+        { name: "Web Server (Nginx)", status: Math.random() > 0.1 ? ServiceStatus.Active : ServiceStatus.Inactive },
+        { name: "Firewall (UFW)", status: ServiceStatus.Active }, // Firewall should usually be active
+        { name: "Database (PostgreSQL)", status: Math.random() > 0.6 ? ServiceStatus.Active : ServiceStatus.Inactive },
+        { name: "Cron Daemon", status: ServiceStatus.Active },
+    ];
+
     const details: ServerDetails = {
-        ipAddress: "192.168.1.101",
-        domain: "panel.example.com",
+        ipAddress: "172.67.142.151",
+        domain: "ssh-panel.dev",
         os: "Ubuntu 22.04.3 LTS",
-        uptime: "14d 8h 22m",
-        services: [
-            { name: "SSH (OpenSSH)", status: ServiceStatus.Active },
-            { name: "Web Server (Nginx)", status: ServiceStatus.Active },
-            { name: "Firewall (UFW)", status: ServiceStatus.Active },
-            { name: "Database (PostgreSQL)", status: ServiceStatus.Inactive },
-        ],
+        uptime: formatUptime(uptimeMs),
+        services: services,
     };
     return simulateApi(details);
 };

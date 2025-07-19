@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { login } from '../../services/sshApiService';
 import Button from '../shared/Button';
 import Icon from '../shared/Icon';
 
 interface LoginProps {
-  onLoginSuccess: () => void;
+  onLoginSuccess: (isDefault: boolean) => void;
 }
 
 const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
@@ -20,9 +19,9 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     setLoading(true);
 
     try {
-      const success = await login(username, password);
+      const { success, isDefault } = await login(username, password);
       if (success) {
-        onLoginSuccess();
+        onLoginSuccess(isDefault);
       } else {
         setError('Invalid username or password.');
       }
@@ -87,9 +86,6 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             </Button>
           </div>
         </form>
-         <div className="text-center text-xs text-slate-500">
-            <p>For demo purposes, use 'admin' / 'password'.</p>
-        </div>
       </div>
     </div>
   );

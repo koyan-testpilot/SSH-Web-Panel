@@ -25,7 +25,7 @@ export interface DashboardStats {
   totalBandwidth: number;
 }
 
-export type Page = 'dashboard' | 'users' | 'installation' | 'help';
+export type Page = 'dashboard' | 'users' | 'installation' | 'help' | 'authentication';
 
 // New types for Server Status
 export enum ServiceStatus {

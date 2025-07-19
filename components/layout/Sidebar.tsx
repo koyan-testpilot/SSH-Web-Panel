@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Icon from '../shared/Icon';
 import { Page } from '../../types';
@@ -12,6 +11,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
     { id: 'users', label: 'Users', icon: 'users' },
+    { id: 'authentication', label: 'Authentication', icon: 'key' },
     { id: 'installation', label: 'Installation', icon: 'command-line' },
     { id: 'help', label: 'GitHub Guide', icon: 'help' },
   ];

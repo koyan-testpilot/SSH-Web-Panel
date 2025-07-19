@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Page } from '../../types';
 import Button from '../shared/Button';
@@ -12,6 +11,7 @@ interface HeaderProps {
 const pageTitles: Record<Page, string> = {
     dashboard: "Dashboard Overview",
     users: "User Management",
+    authentication: "Authentication Settings",
     installation: "VPS Installation Guide",
     help: "GitHub Deployment Guide"
 }
