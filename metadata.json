@@ -1,0 +1,6 @@
+{
+  "name": "SSH Server Web Panel",
+  "description": "A modern web panel to manage an SSH server. It allows for user management, bandwidth tracking, and provides a dashboard for monitoring server activity. Includes a guide for deploying the project to GitHub.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
