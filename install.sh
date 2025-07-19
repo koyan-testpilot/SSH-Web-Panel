@@ -12,11 +12,11 @@ if ! command -v node >/dev/null 2>&1; then
 fi
 
 # 2. Clone the repo (replace with your repo URL)
-if [ ! -d "ssh-server-web-panel" ]; then
+if [ ! -d "SSH-Web-Panel" ]; then
   git clone https://github.com/koyan-testpilot/SSH-Web-Panel.git
-  cd ssh-server-web-panel
+  cd SSH-Web-Panel
 else
-  cd ssh-server-web-panel
+  cd SSH-Web-Panel
   git pull
 fi
 
